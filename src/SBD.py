@@ -2,6 +2,11 @@ import sys
 
 train_file = "../data/train/" + sys.argv[1]
 
+def get_L(token):
+    if token.endswith("."):
+        return token[:-1]
+    return None
+
 with open(train_file, "r") as file:
     L_counts = {}
 
