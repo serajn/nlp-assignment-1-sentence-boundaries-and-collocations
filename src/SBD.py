@@ -3,6 +3,7 @@ import sys
 train_file = "../data/train/" + sys.argv[1]
 
 X_train = []
+Y_train = []
 
 '''
 Functions to extract features from the tokens. The features are:
@@ -18,10 +19,10 @@ Functions to extract features from the tokens. The features are:
 '''
 
 def get_L(L_token):
-    return L_token[:-1] if L_token.endswith(".") else None
+    return L_token[:-1] if L_token.endswith(".") else 0
 
 def get_R(R_token):
-    return R_token if R_token  != '' else None
+    return R_token if R_token  != '' else 0
 
 def is_L_less_than_four(L_token):
     L = L_token[:-1]
@@ -73,6 +74,36 @@ def extract_features(L_token, R_token):
         is_R_a_number(R_token)
     ]
 
+def encode_tokens(x_train):
+    L_encoding = {}
+    R_encoding = {}
+
+    next_L_id = 0
+    next_R_id = 1   # Start R encoding from 1. 0 is reserved for the empty token.
+
+    for feature_vector in x_train:
+        L_token = feature_vector[0]
+        R_token = feature_vector[1]
+
+        if L_token not in L_encoding:
+            L_encoding[L_token] = next_L_id
+            next_L_id += 1
+
+        feature_vector[0] = L_encoding[L_token]
+
+        if R_token == 0:
+            continue
+
+        if R_token not in R_encoding:
+            R_encoding[R_token] = next_R_id
+            next_R_id += 1
+
+        feature_vector[1] = R_encoding[R_token]
+
+    #print("L Encoding:", L_encoding)
+    #print("R Encoding:", R_encoding)
+
+
 with open(train_file, "r") as file:
     lines = file.readlines()
 
@@ -105,6 +136,10 @@ with open(train_file, "r") as file:
                 R_token = ''
 
             X_train.append(extract_features(L_token, R_token)) # Append the extracted features to the X_train list
+            Y_train.append(columns[2]) # Append the label to the Y_train list
+
+encode_tokens(X_train) # Encode the L and R tokens in the X_train list
 
 print(X_train)
+#print(Y_train)
             
