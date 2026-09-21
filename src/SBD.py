@@ -103,6 +103,14 @@ def encode_tokens(x_train):
     #print("L Encoding:", L_encoding)
     #print("R Encoding:", R_encoding)
 
+def encode_labels(y_train):
+    label_encoding = {
+        "NEOS": 0,
+        "EOS": 1
+    }
+
+    for i, label in enumerate(y_train):
+        y_train[i] = label_encoding[label]
 
 with open(train_file, "r") as file:
     lines = file.readlines()
@@ -139,7 +147,8 @@ with open(train_file, "r") as file:
             Y_train.append(columns[2]) # Append the label to the Y_train list
 
 encode_tokens(X_train) # Encode the L and R tokens in the X_train list
+encode_labels(Y_train) # Encode the labels in the Y_train list
 
-print(X_train)
+#print(X_train)
 #print(Y_train)
             
