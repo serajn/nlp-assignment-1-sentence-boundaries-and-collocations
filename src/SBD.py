@@ -2,10 +2,19 @@ import sys
 
 train_file = "../data/train/" + sys.argv[1]
 
-def get_L(token):
-    if token.endswith("."):
-        return token[:-1]
-    return None
+X_train = []
+
+def get_L(L_token):
+    return L_token[:-1] if L_token.endswith(".") else None
+
+def get_R(R_token):
+    return R_token if R_token  != '' else None
+
+def extract_features(L_token, R_token):
+    return [
+        get_L(L_token),
+        get_R(R_token)
+    ]
 
 with open(train_file, "r") as file:
     L_counts = {}
@@ -32,12 +41,9 @@ with open(train_file, "r") as file:
 
     for line in file:
         columns = line.split()
-        token = columns[1]
-        label = columns[2]
+        L_token = columns[1]
+        R_token = file.readline().split()[1]
 
-        if token.endswith("."):
-            L = token[:-1]
-
-            if L in L_counts:
-                count = L_counts[L]
-                print(L, count, label)
+        if L_token.endswith("."):
+            X_train.append(extract_features(L_token, R_token))
+            
