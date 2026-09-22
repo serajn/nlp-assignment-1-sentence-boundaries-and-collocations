@@ -1,9 +1,15 @@
 import sys
+from sklearn.tree import DecisionTreeClassifier
 
 train_file = "../data/train/" + sys.argv[1]
+test_file = "../data/test/" + sys.argv[2]
+
+L_counts = {} # Dictionary to store the counts of L tokens
 
 X_train = []
 Y_train = []
+
+X_test = []
 
 '''
 Functions to extract features from the tokens. The features are:
@@ -74,14 +80,14 @@ def extract_features(L_token, R_token):
         is_R_a_number(R_token)
     ]
 
-def encode_tokens(x_train):
+def encode_tokens(x_array):
     L_encoding = {}
     R_encoding = {}
 
     next_L_id = 0
     next_R_id = 1   # Start R encoding from 1. 0 is reserved for the empty token.
 
-    for feature_vector in x_train:
+    for feature_vector in x_array:
         L_token = feature_vector[0]
         R_token = feature_vector[1]
 
@@ -112,43 +118,61 @@ def encode_labels(y_train):
     for i, label in enumerate(y_train):
         y_train[i] = label_encoding[label]
 
-with open(train_file, "r") as file:
-    lines = file.readlines()
+def preprocess_data(data_file, X_array, Y_array=0):
+    with open(data_file, "r") as file:
+        lines = file.readlines()
 
-    L_counts = {} # Dictionary to store the counts of L tokens
+        #L_counts = {} # Dictionary to store the counts of L tokens
 
-    # First Pass of the data: Count the occurrences of each L token in the training data
-    for line in lines:
-        columns = line.split()
-        token_number = columns[0]
-        token = columns[1]
-        #label = columns[2]
+        # First Pass of the data: Count the occurrences of each L token in the training data
+        for line in lines:
+            columns = line.split()
+            #token_number = columns[0]
+            token = columns[1]
+            #label = columns[2]
 
-        if token.endswith("."):
-            L = token[:-1]
+            if token.endswith("."):
+                L = token[:-1]
 
-            if L in L_counts:
-                L_counts[L] += 1
-            else:
-                L_counts[L] = 1
+                if L in L_counts:
+                    L_counts[L] += 1
+                else:
+                    L_counts[L] = 1
 
-    # Second Pass of the data: Extract features for each token in the training data
-    for i, line in enumerate(lines):
-        columns = line.split()
-        L_token = columns[1]
+        # Second Pass of the data: Extract features for each token in the training data
+        for i, line in enumerate(lines):
+            columns = line.split()
+            L_token = columns[1]
 
-        if L_token.endswith("."):
-            if i + 1 < len(lines):
-                R_token = lines[i + 1].split()[1]
-            else:
-                R_token = ''
+            if L_token.endswith("."):
+                if i + 1 < len(lines):
+                    R_token = lines[i + 1].split()[1]
+                else:
+                    R_token = ''
 
-            X_train.append(extract_features(L_token, R_token)) # Append the extracted features to the X_train list
-            Y_train.append(columns[2]) # Append the label to the Y_train list
+                X_array.append(extract_features(L_token, R_token)) # Append the extracted features to the X_train list
 
-encode_tokens(X_train) # Encode the L and R tokens in the X_train list
-encode_labels(Y_train) # Encode the labels in the Y_train list
+                if Y_array != 0:
+                    Y_array.append(columns[2]) # Append the label to the Y_train list
+                
+
+    encode_tokens(X_array) # Encode the L and R tokens in the X_train list
+
+    if Y_array != 0:
+        encode_labels(Y_array) # Encode the labels in the Y_train list
+
+
+preprocess_data(train_file, X_train, Y_train) # Preprocess the training data and extract features
+
+#classifer = DecisionTreeClassifier()
+#classifer.fit(X_train, Y_train)
+
+preprocess_data(test_file, X_test) # Preprocess the test data and extract features
 
 #print(X_train)
 #print(Y_train)
+
+#print(X_test)
+
+
             
