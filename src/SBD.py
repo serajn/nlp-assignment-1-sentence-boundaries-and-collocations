@@ -1,16 +1,61 @@
 import sys
 from sklearn.tree import DecisionTreeClassifier, export_text
 
+'''
+Program Pipline:
+1. Periods in the training dataset are identified
+2. Feature vectors are built for the training dataset and inserted into an array X
+3. Corresponding labels are inserted into an array Y
+4. Feature vectors in array X and labels in array Y are encoded
+5. Period in the test dataset are indentified
+6. Feature vectors are built for the test dataset and inserted into an array X
+7. Array X and Array Y are passed to the classifer for training
+8. The fitted model predicts labels
+9. Decision-tree graph is generated
+10. Model accuracy is calculated
+11. Text file comparing gold-standard labels with predicted labels is generated
+
+'''
+
 train_file = "../data/train/" + sys.argv[1]
 test_file = "../data/test/" + sys.argv[2]
 
+if len(sys.argv) != 3 and not sys.argv[1].endswith(".train") and not sys.argv[2].endswith(".test"):
+    print("Usage: python SBD.py <train_file> <test_file>")
+    sys.exit(1)
+
+# Dictionaries storing token encodings
+L_encoding = {}
+R_encoding = {}
+
+# Unkown values for tokens that appear in test dataset but not in training dataset
+UNK_L = 999999
+UNK_R = 999999
+
+# Feature names and class names used to enhance graph readability
+feature_names = [
+    "L",
+    "R",
+    "is_L_less_than_four",
+    "is_L_a_number",
+    "is_L_capitalized",
+    "count_L",
+    "is_R_capitalized",
+    "is_R_a_number"
+]
+
+class_names = ["NEOS", "EOS"]
+
 '''
 Functions to extract features from the tokens. The features are:
+(Core Features)
 1. L: The token to the left of the period (without the period).
 2. R: The token to the right of the period.
 3. is_L_less_than_four: A binary feature indicating if the left token is less than four characters long.
 4. is_L_a_number: A binary feature indicating if the left token is a number.
 5. is_L_capitalized: A binary feature indicating if the left token is capitalized.
+
+(Additional Features)
 6. count_L: A feature indicating the count of how many times the left token appears to the left of a period.
 7. is_R_capitalized: A binary feature indicating if the right token is capitalized.
 8. is_R_a_number: A binary feature indicating if the right token is a number.
@@ -73,27 +118,22 @@ def extract_features(L_token, R_token, L_counts):
         is_R_a_number(R_token)
     ]
 
-L_encoding = {}
-R_encoding = {}
+'''
+The encode_tokens and encode_labels function encode the feature vectors in both the vector array and label array.
+Dictionaries are used to store and keep track of the token-value pairs. The encode_tokens function utilizes a binary flag
+to first build the dictionaries using the training dataset. The test dataset feature vectors are then encoded by setting the flag 
+to 'False' using the already built dictionary to keep token encoding consistent across the training and test datasets.
 
-UNK_L = 999999
-UNK_R = 999999
+'''
 
-def encode_tokens(x_array, build_encoding=True):
-
-    #next_L_id = 0
-    #next_R_id = 1   # Start R encoding from 1. 0 is reserved for the empty token.
-
+def encode_tokens(X_array, build_encoding=True):
     if build_encoding:
 
-        for feature_vector in x_array:
+        for feature_vector in X_array:
             L_token = feature_vector[0]
             R_token = feature_vector[1]
 
             if L_token not in L_encoding:
-                #L_encoding[L_token] = next_L_id
-                #next_L_id += 1
-
                 L_encoding[L_token] = len(L_encoding)  # Assign the next available ID based on the current size of the encoding dictionary
 
             feature_vector[0] = L_encoding[L_token]
@@ -102,15 +142,12 @@ def encode_tokens(x_array, build_encoding=True):
                 continue
 
             if R_token not in R_encoding:
-                #R_encoding[R_token] = next_R_id
-                #next_R_id += 1
-
-                R_encoding[R_token] = len(R_encoding) + 1
+                R_encoding[R_token] = len(R_encoding) + 1 # Increment by 1 to reserve 0 for the empty token
 
             feature_vector[1] = R_encoding[R_token]
 
     else:
-        for feature_vector in x_array:
+        for feature_vector in X_array:
             L_token = feature_vector[0]
             R_token = feature_vector[1]
 
@@ -125,19 +162,23 @@ def encode_tokens(x_array, build_encoding=True):
             if R_token in R_encoding:
                 feature_vector[1] = R_encoding[R_token]
             else:
-                feature_vector[1] = UNK_R
+                feature_vector[1] = UNK_R    
 
-    #print("L Encoding:", L_encoding)
-    #print("R Encoding:", R_encoding)
-
-def encode_labels(y_train):
+def encode_labels(Y_array):
     label_encoding = {
         "NEOS": 0,
         "EOS": 1
     }
 
-    for i, label in enumerate(y_train):
-        y_train[i] = label_encoding[label]
+    for i, label in enumerate(Y_array):
+        Y_array[i] = label_encoding[label]
+
+'''
+The function build_L_counts performs a pass-through of the training data file. This function counts and stores all tokens
+that appear to the left of a period. This number can give the model statistical insight into the entire training dataset.
+This also serves an alternative to using pre-loaded dictionary of common abbreviations.
+
+'''
 
 def build_L_counts(data_file):
     with open(data_file, "r") as file:
@@ -159,6 +200,12 @@ def build_L_counts(data_file):
 
     return L_counts
 
+'''
+The function build_feature_array builds the feature arrays. This function removes this responsibilty
+from the preprocess_data function.
+
+'''
+
 def build_feature_array(data_file, X_array, Y_array, L_counts):
     with open(data_file, "r") as file:
         lines = file.readlines()
@@ -173,9 +220,14 @@ def build_feature_array(data_file, X_array, Y_array, L_counts):
                 else:
                     R_token = ''
 
-                X_array.append(extract_features(L_token, R_token, L_counts)) # Append the extracted features to the X_train list
-                Y_array.append(columns[2]) # Append the label to the Y_train list
+                X_array.append(extract_features(L_token, R_token, L_counts)) 
+                Y_array.append(columns[2])
 
+'''
+The preprocess_data function handles both the training and test datasets. Feature vectors are built and inserted into arrays X and Y so they
+can be properly passed to the decision tree classifer. The arrays are also encoded here.
+
+'''
 
 def preprocess_data(train_file, test_file):
     X_train = [] 
@@ -184,22 +236,24 @@ def preprocess_data(train_file, test_file):
     X_test = []
     Y_test = []
 
-    L_counts = build_L_counts(train_file)  # Build the L_counts dictionary for the training data
+    L_counts = build_L_counts(train_file)
 
     build_feature_array(train_file, X_train, Y_train, L_counts)  # Build the feature array for the training data
     
-    encode_tokens(X_train) # Encode the L and R tokens in the X_train list
-    encode_labels(Y_train) # Encode the labels in the Y_train list
+    encode_tokens(X_train)
+    encode_labels(Y_train)
 
     build_feature_array(test_file, X_test, Y_test, L_counts)  # Build the feature array for the test data using the same L_counts from the training data
 
     encode_tokens(X_test, build_encoding=False) # Encode the L and R tokens in the X_test list using the existing encoding
-    encode_labels(Y_test) # Encode the labels in the Y_test list   
+    encode_labels(Y_test)   
 
     return X_train, Y_train, X_test, Y_test
 
 X_train, Y_train, X_test, Y_test =  preprocess_data(train_file, test_file) # Preprocess the training and test data and extract features
 
+
+# Debugging funtions (ignore)
 '''
 with open("encoded_train.txt", "w") as file:
     for feature_vector in X_train:
@@ -223,19 +277,6 @@ classifier = DecisionTreeClassifier()
 classifier.fit(X_train, Y_train)
 
 predictions = classifier.predict(X_test) # Make predictions on the test data
-
-feature_names = [
-    "L",
-    "R",
-    "is_L_less_than_four",
-    "is_L_a_number",
-    "is_L_capitalized",
-    "count_L",
-    "is_R_capitalized",
-    "is_R_a_number"
-]
-
-class_names = ["NEOS", "EOS"]
 
 tree_text = export_text(classifier, feature_names=feature_names, class_names=class_names)
 print(tree_text) # Print the decision tree structure
