@@ -1,15 +1,8 @@
 import sys
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 
 train_file = "../data/train/" + sys.argv[1]
 test_file = "../data/test/" + sys.argv[2]
-
-L_counts = {} # Dictionary to store the counts of L tokens
-
-X_train = []
-Y_train = []
-
-X_test = []
 
 '''
 Functions to extract features from the tokens. The features are:
@@ -46,7 +39,7 @@ def is_L_capitalized(L_token):
     
     return 1 if L[0].isupper() else 0
 
-def count_L(L_token):
+def count_L(L_token, L_counts):
     L = L_token[:-1]
     return L_counts[L] if L in L_counts else 0
 
@@ -68,43 +61,71 @@ and returns them as a list. Each individual feature is intentionally kept as a s
 allow for easy modification and testing of individual features.
 
 '''
-def extract_features(L_token, R_token):
+def extract_features(L_token, R_token, L_counts):
     return [
         get_L(L_token),
         get_R(R_token),
-        is_L_less_than_four(L_token),
-        is_L_a_number(L_token),
-        is_L_capitalized(L_token),
-        count_L(L_token),
+        is_L_less_than_four(get_L(L_token)),
+        is_L_a_number(get_L(L_token)),
+        is_L_capitalized(get_L(L_token)),
+        count_L(L_token, L_counts),
         is_R_capitalized(R_token),
         is_R_a_number(R_token)
     ]
 
-def encode_tokens(x_array):
-    L_encoding = {}
-    R_encoding = {}
+L_encoding = {}
+R_encoding = {}
 
-    next_L_id = 0
-    next_R_id = 1   # Start R encoding from 1. 0 is reserved for the empty token.
+UNK_L = 999999
+UNK_R = 999999
 
-    for feature_vector in x_array:
-        L_token = feature_vector[0]
-        R_token = feature_vector[1]
+def encode_tokens(x_array, build_encoding=True):
 
-        if L_token not in L_encoding:
-            L_encoding[L_token] = next_L_id
-            next_L_id += 1
+    #next_L_id = 0
+    #next_R_id = 1   # Start R encoding from 1. 0 is reserved for the empty token.
 
-        feature_vector[0] = L_encoding[L_token]
+    if build_encoding:
 
-        if R_token == 0:
-            continue
+        for feature_vector in x_array:
+            L_token = feature_vector[0]
+            R_token = feature_vector[1]
 
-        if R_token not in R_encoding:
-            R_encoding[R_token] = next_R_id
-            next_R_id += 1
+            if L_token not in L_encoding:
+                #L_encoding[L_token] = next_L_id
+                #next_L_id += 1
 
-        feature_vector[1] = R_encoding[R_token]
+                L_encoding[L_token] = len(L_encoding)  # Assign the next available ID based on the current size of the encoding dictionary
+
+            feature_vector[0] = L_encoding[L_token]
+
+            if R_token == 0:
+                continue
+
+            if R_token not in R_encoding:
+                #R_encoding[R_token] = next_R_id
+                #next_R_id += 1
+
+                R_encoding[R_token] = len(R_encoding) + 1
+
+            feature_vector[1] = R_encoding[R_token]
+
+    else:
+        for feature_vector in x_array:
+            L_token = feature_vector[0]
+            R_token = feature_vector[1]
+
+            if L_token in L_encoding:
+                feature_vector[0] = L_encoding[L_token]
+            else:
+                feature_vector[0] = UNK_L
+
+            if R_token == 0:
+                continue
+
+            if R_token in R_encoding:
+                feature_vector[1] = R_encoding[R_token]
+            else:
+                feature_vector[1] = UNK_R
 
     #print("L Encoding:", L_encoding)
     #print("R Encoding:", R_encoding)
@@ -118,18 +139,15 @@ def encode_labels(y_train):
     for i, label in enumerate(y_train):
         y_train[i] = label_encoding[label]
 
-def preprocess_data(data_file, X_array, Y_array=0):
+def build_L_counts(data_file):
     with open(data_file, "r") as file:
+        L_counts = {}
+
         lines = file.readlines()
 
-        #L_counts = {} # Dictionary to store the counts of L tokens
-
-        # First Pass of the data: Count the occurrences of each L token in the training data
         for line in lines:
             columns = line.split()
-            #token_number = columns[0]
             token = columns[1]
-            #label = columns[2]
 
             if token.endswith("."):
                 L = token[:-1]
@@ -139,7 +157,12 @@ def preprocess_data(data_file, X_array, Y_array=0):
                 else:
                     L_counts[L] = 1
 
-        # Second Pass of the data: Extract features for each token in the training data
+    return L_counts
+
+def build_feature_array(data_file, X_array, Y_array, L_counts):
+    with open(data_file, "r") as file:
+        lines = file.readlines()
+
         for i, line in enumerate(lines):
             columns = line.split()
             L_token = columns[1]
@@ -150,29 +173,99 @@ def preprocess_data(data_file, X_array, Y_array=0):
                 else:
                     R_token = ''
 
-                X_array.append(extract_features(L_token, R_token)) # Append the extracted features to the X_train list
-
-                if Y_array != 0:
-                    Y_array.append(columns[2]) # Append the label to the Y_train list
-                
-
-    encode_tokens(X_array) # Encode the L and R tokens in the X_train list
-
-    if Y_array != 0:
-        encode_labels(Y_array) # Encode the labels in the Y_train list
+                X_array.append(extract_features(L_token, R_token, L_counts)) # Append the extracted features to the X_train list
+                Y_array.append(columns[2]) # Append the label to the Y_train list
 
 
-preprocess_data(train_file, X_train, Y_train) # Preprocess the training data and extract features
+def preprocess_data(train_file, test_file):
+    X_train = [] 
+    Y_train = []
 
-#classifer = DecisionTreeClassifier()
-#classifer.fit(X_train, Y_train)
+    X_test = []
+    Y_test = []
 
-preprocess_data(test_file, X_test) # Preprocess the test data and extract features
+    L_counts = build_L_counts(train_file)  # Build the L_counts dictionary for the training data
 
-#print(X_train)
-#print(Y_train)
+    build_feature_array(train_file, X_train, Y_train, L_counts)  # Build the feature array for the training data
+    
+    encode_tokens(X_train) # Encode the L and R tokens in the X_train list
+    encode_labels(Y_train) # Encode the labels in the Y_train list
 
-#print(X_test)
+    build_feature_array(test_file, X_test, Y_test, L_counts)  # Build the feature array for the test data using the same L_counts from the training data
+
+    encode_tokens(X_test, build_encoding=False) # Encode the L and R tokens in the X_test list using the existing encoding
+    encode_labels(Y_test) # Encode the labels in the Y_test list   
+
+    return X_train, Y_train, X_test, Y_test
+
+X_train, Y_train, X_test, Y_test =  preprocess_data(train_file, test_file) # Preprocess the training and test data and extract features
+
+'''
+with open("encoded_train.txt", "w") as file:
+    for feature_vector in X_train:
+        file.write(str(feature_vector) + "\n")
+
+with open("L_encoding.txt", "w") as file:
+    for token, encoding in L_encoding.items():
+        file.write(f"{token}: {encoding}\n")
+
+with open("encoded_test.txt", "w") as file:
+    for feature_vector in X_test:
+        file.write(str(feature_vector) + "\n")
+
+with open("R_encoding.txt", "w") as file:
+    for token, encoding in R_encoding.items():
+        file.write(f"{token}: {encoding}\n")
+
+'''
+
+classifier = DecisionTreeClassifier()
+classifier.fit(X_train, Y_train)
+
+predictions = classifier.predict(X_test) # Make predictions on the test data
+
+feature_names = [
+    "L",
+    "R",
+    "is_L_less_than_four",
+    "is_L_a_number",
+    "is_L_capitalized",
+    "count_L",
+    "is_R_capitalized",
+    "is_R_a_number"
+]
+
+class_names = ["NEOS", "EOS"]
+
+tree_text = export_text(classifier, feature_names=feature_names, class_names=class_names)
+print(tree_text) # Print the decision tree structure
+
+correct = 0
+
+for prediction, actual in zip(predictions, Y_test):
+    if prediction == actual:
+        correct += 1
+
+accuracy = correct / len(Y_test) * 100
+
+print(f"Accuracy: {accuracy:.2f}%") # Print the accuracy of the model on the test data
 
 
-            
+i = 0
+
+with open(test_file, "r") as infile, open("SBD.test.out", "w") as outfile:
+    for line in infile:
+        columns = line.split()
+        token = columns[1]
+        label = columns[2]
+
+        if token.endswith("."):
+            predicted_label = predictions[i]
+            if predicted_label == 0:
+                predicted_label = "NEOS"
+            else:
+                predicted_label = "EOS"
+            i += 1
+
+            outfile.write(f"{token} {label} {predicted_label}\n")
+                   
