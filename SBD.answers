@@ -1,0 +1,17 @@
+Additonal Feature Discription:
+1. Is R a number? - Checks to see if the token to the right of the period
+    is a number or not. Numbers on both sides of the period can now be
+    represented.
+2. Is the first letter of L capitalized? - Checks to see if L is capitalized. This feature
+    was chosen because a large number of abbreviations tend to be captilaized. This feature
+    captures that fact.
+3. The number of times token L appears to the left of a period - Each L across the training dataset
+    is counted. This gives the model statistical insight into the data. The main motivation behind
+    this feature is to serve as an alternative to using and external list of common abbreviations.
+
+Completeness of the program:
+The program is complete.
+
+Accuracy of the system using all eight features:                    98.34%
+Accuracy of the system using only the five core features:           97.74%
+Accuracy of the system using only the three additonal features:     
