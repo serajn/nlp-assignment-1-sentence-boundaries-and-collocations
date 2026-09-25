@@ -25,7 +25,7 @@ def count_unigrams(infile):
 
     return unigrams       
 
-def count_bigrams():
+def count_bigrams(infile):
     with open(infile, "r") as file:
         bigrams = {}
 
@@ -44,10 +44,15 @@ def count_bigrams():
                 if bigram in bigrams:
                     bigrams[bigram] += 1
                 else:
-                    bigrams[bigram] = 12
+                    bigrams[bigram] = 1
                 
 
         with open("bigrams.txt", "w") as outfile:
             outfile.write(f"{bigrams}")
-            
+
     return bigrams
+
+def calculate_chi_square(unigrams, bigrams):
+        for bigram in bigrams:
+            observed_value = bigrams[bigram]
+            #expected_value = 
