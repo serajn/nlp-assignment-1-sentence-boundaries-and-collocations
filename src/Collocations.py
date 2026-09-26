@@ -94,7 +94,7 @@ def calculate_pmi(unigrams, bigrams):
 
     return pmi_scores
 
-def print_top_twenty(chi_squares):
+def print_top_twenty_chi_squares(chi_squares):
     top_twenty = sorted(chi_squares.items(), key=lambda item: item[1], reverse=True)[:20]
 
     for score in top_twenty:
@@ -107,7 +107,7 @@ bigrams = count_bigrams(infile)
 chi_squares = calculate_chi_squares(unigrams, bigrams)
 pmi_scores = calculate_pmi(unigrams, bigrams)
 
-print_top_twenty(chi_squares)
+print_top_twenty_chi_squares(chi_squares)
     
 
 
