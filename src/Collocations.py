@@ -78,12 +78,21 @@ def calculate_chi_squares(unigrams, bigrams):
 
     return chi_squares
 
+def print_top_twenty(chi_squares):
+    top_twenty = sorted(chi_squares.items(), key=lambda item: item[1], reverse=True)[:20]
+
+    for score in top_twenty:
+        print(f"{score[0]} {round(score[1], 3)}")
+
+
 unigrams = count_unigrams(infile)
 bigrams = count_bigrams(infile)
 
 N = calculate_N(bigrams)
 
 chi_squares = calculate_chi_squares(unigrams, bigrams)
+
+print_top_twenty(chi_squares)
     
 
 
