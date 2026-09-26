@@ -1,5 +1,6 @@
-import string
+import sys
 import math
+import string
 
 infile = "../data/train/Collocations"
 
@@ -106,16 +107,28 @@ def print_top_twenty_pmi_scores(pmi_scores):
     for score in top_twenty:
         print(f"{score[0]} {round(score[1], 3)}")
 
+def main():
 
-unigrams = count_unigrams(infile)
-bigrams = count_bigrams(infile)
+    if len(sys.argv) != 3:
+        print("Usage: python Collocations.py Collocations <measure>")
+        sys.exit(1)
 
-chi_squares = calculate_chi_squares(unigrams, bigrams)
-pmi_scores = calculate_pmi(unigrams, bigrams)
+    unigrams = count_unigrams(infile)
+    bigrams = count_bigrams(infile)
+    
+    if sys.argv[2] == "chi-square":
+        chi_squares = calculate_chi_squares(unigrams, bigrams)
+        print_top_twenty_chi_squares(chi_squares)
 
-print_top_twenty_chi_squares(chi_squares)
-print()
-print_top_twenty_pmi_scores(pmi_scores)
+    elif sys.argv[2] == "pmi":
+        pmi_scores = calculate_pmi(unigrams, bigrams)
+        print_top_twenty_pmi_scores(pmi_scores)
+
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+
     
 
 
