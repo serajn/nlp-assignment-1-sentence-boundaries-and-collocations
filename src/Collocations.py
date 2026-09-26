@@ -52,7 +52,38 @@ def count_bigrams(infile):
 
     return bigrams
 
-def calculate_chi_square(unigrams, bigrams):
-        for bigram in bigrams:
-            observed_value = bigrams[bigram]
-            #expected_value = 
+def calculate_N(bigrams):
+    count = 0
+
+    for bigram in bigrams:
+        count += bigrams[bigram]
+
+    return count
+
+def calculate_chi_squares(unigrams, bigrams):
+    chi_squares = {}
+
+    N = calculate_N(bigrams)
+    
+    for bigram in bigrams:
+        observed_value = bigrams[bigram]
+        expected_value = (unigrams[bigram[0]] * unigrams[bigram[1]] / N)
+
+        chi_square = pow(observed_value - expected_value, 2) / expected_value
+
+        chi_squares[bigram] = chi_square
+
+    with open("chi_squares.txt", "w") as outfile:
+        outfile.write(f"{chi_squares}")
+
+    return chi_squares
+
+unigrams = count_unigrams(infile)
+bigrams = count_bigrams(infile)
+
+N = calculate_N(bigrams)
+
+chi_squares = calculate_chi_squares(unigrams, bigrams)
+    
+
+
