@@ -1,4 +1,5 @@
 import string
+import math
 
 infile = "../data/train/Collocations"
 
@@ -78,6 +79,21 @@ def calculate_chi_squares(unigrams, bigrams):
 
     return chi_squares
 
+def calculate_pmi(unigrams, bigrams):
+    pmi_scores = {}
+
+    N = calculate_N(bigrams)
+
+    for bigram in bigrams:
+        pmi_score = math.log((bigrams[bigram] * N) / (unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
+
+        pmi_scores[bigram] = pmi_score
+
+    with open("pmi_scores.txt", "w") as outfile:
+        outfile.write(f"{pmi_scores}")
+
+    return pmi_scores
+
 def print_top_twenty(chi_squares):
     top_twenty = sorted(chi_squares.items(), key=lambda item: item[1], reverse=True)[:20]
 
@@ -88,9 +104,8 @@ def print_top_twenty(chi_squares):
 unigrams = count_unigrams(infile)
 bigrams = count_bigrams(infile)
 
-N = calculate_N(bigrams)
-
 chi_squares = calculate_chi_squares(unigrams, bigrams)
+pmi_scores = calculate_pmi(unigrams, bigrams)
 
 print_top_twenty(chi_squares)
     
