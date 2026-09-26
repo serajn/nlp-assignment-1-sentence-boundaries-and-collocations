@@ -100,6 +100,12 @@ def print_top_twenty_chi_squares(chi_squares):
     for score in top_twenty:
         print(f"{score[0]} {round(score[1], 3)}")
 
+def print_top_twenty_pmi_scores(pmi_scores):
+    top_twenty = sorted(pmi_scores.items(), key=lambda item: item[1], reverse=True)[:20]
+
+    for score in top_twenty:
+        print(f"{score[0]} {round(score[1], 3)}")
+
 
 unigrams = count_unigrams(infile)
 bigrams = count_bigrams(infile)
@@ -108,6 +114,8 @@ chi_squares = calculate_chi_squares(unigrams, bigrams)
 pmi_scores = calculate_pmi(unigrams, bigrams)
 
 print_top_twenty_chi_squares(chi_squares)
+print()
+print_top_twenty_pmi_scores(pmi_scores)
     
 
 
