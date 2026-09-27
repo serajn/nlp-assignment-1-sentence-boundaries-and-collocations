@@ -2,8 +2,6 @@ import sys
 import math
 import string
 
-infile = "../data/train/Collocations"
-
 def count_unigrams(infile):
     with open(infile, "r") as file:
         unigrams = {}
@@ -112,6 +110,8 @@ def main():
     if len(sys.argv) != 3:
         print("Usage: python Collocations.py Collocations <measure>")
         sys.exit(1)
+
+    infile = sys.argv[1]
 
     unigrams = count_unigrams(infile)
     bigrams = count_bigrams(infile)
