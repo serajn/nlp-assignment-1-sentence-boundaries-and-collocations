@@ -10,8 +10,58 @@ Additonal Feature Discription:
     this feature is to serve as an alternative to using and external list of common abbreviations.
 
 Completeness of the program:
-The program is complete.
+    Check List:
+        - Identify all the period occurrences where the period ends a word:     Yes
+        - For each period occurence; extract the five core features and
+          the tree additional features of the student's own choosing:           Yes
+        - For both training and test datasets, create a collection of 
+          feature vectors corresponding to each instance of a perios:           Yes
+        - Using the sk­learn.tree library, train a decision tree classifier
+          and apply the resulting model to predict labels from the test set:    Yes
+        - Use the export_text function from the sklearn.tree library to 
+          generate a text graph:                                                Yes
+        - Compare the labels predicted by the classifier for the feature 
+          vectors obtained from SBD.test against the provided (gold-­standard) 
+          labels and calculate the accuracy of your system.:                    Yes
+
+    All steps as required by the assignment instructions have been fulfilled.
 
 Accuracy of the system using all eight features:                    98.34%
 Accuracy of the system using only the five core features:           97.74%
-Accuracy of the system using only the three additonal features:     
+Accuracy of the system using only the three additonal features:     75.44%
+
+Discussion on accuracy of the system using different feature configurations:
+
+As can be seen by the results, the system preforms very well using only the five
+core features; the three additional features only improve the system by 0.6%.
+This suggests that the five core features already capture most of the readily
+available information for this task. The three additional features do provide
+additional information, but only marginally.
+
+There may be a few reasons for this marginal increase in accuracy beyond the 
+five core features capturing most of the information available. Starting
+with the first additional feature; capturing digits to the right of a period
+is useful for cases such as "Jan. 12", but may be relatively uncommon
+otherwise. Second, L being capitalized is potentially useful for
+distinguishing abbreviations/proper nouns, but may already overlap
+with information already contained in L. Lastly, the frequency of 
+L is potentially useful for Identifying abbreviations, but it may
+be noisy.
+
+Taking these assumptions, it can be concluded that outside the five
+core features, there aren't many obvious features that can be chosen
+that can dramatically increase the accuracy of the system. However, the three
+additional features were able to achieve an accuracy of 75.44% independently,
+meaning that they did capture meaningful information. In the end, more
+experimentation will likely be needed to give a difinitive answer.
+
+Decision Tree:
+
+According to the decision tree that was generated, the feature that appeared at the
+root of the tree, was the additional feature that counted the number of times L
+appears to the left of a period. This is a strong indicator that this feature
+provides a substantial amount of information.
+
+I think this feature is particulary useful because it makes intuitive sense that 
+if a word occurs frequently before a period, it is most likely an abbreviation/proper noun
+and not a sentence boundary.

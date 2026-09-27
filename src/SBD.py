@@ -7,7 +7,7 @@ Program Pipline:
 2. Feature vectors are built for the training dataset and inserted into an array X
 3. Corresponding labels are inserted into an array Y
 4. Feature vectors in array X and labels in array Y are encoded
-5. Period in the test dataset are indentified
+5. Periods in the test dataset are indentified
 6. Feature vectors are built for the test dataset and inserted into an array X
 7. Array X and Array Y are passed to the classifer for training
 8. The fitted model predicts labels
@@ -17,18 +17,11 @@ Program Pipline:
 
 '''
 
-train_file = "../data/train/" + sys.argv[1]
-test_file = "../data/test/" + sys.argv[2]
-
-if len(sys.argv) != 3 and not sys.argv[1].endswith(".train") and not sys.argv[2].endswith(".test"):
-    print("Usage: python SBD.py <train_file> <test_file>")
-    sys.exit(1)
-
 # Dictionaries storing token encodings
 L_encoding = {}
 R_encoding = {}
 
-# Unkown values for tokens that appear in test dataset but not in training dataset
+# Unkown values for token encoding for tokens that appear in test dataset but not in training dataset
 UNK_L = 999999
 UNK_R = 999999
 
@@ -250,9 +243,6 @@ def preprocess_data(train_file, test_file):
 
     return X_train, Y_train, X_test, Y_test
 
-X_train, Y_train, X_test, Y_test =  preprocess_data(train_file, test_file) # Preprocess the training and test data and extract features
-
-
 # Debugging funtions (ignore)
 
 '''
@@ -274,40 +264,54 @@ with open("R_encoding.txt", "w") as file:
 
 '''
 
-classifier = DecisionTreeClassifier()
-classifier.fit(X_train, Y_train)
+def main():
+    if len(sys.argv) != 3 or not sys.argv[1].endswith(".train") or not sys.argv[2].endswith(".test"):
+        print("Usage: python SBD.py <train_file> <test_file>")
+        sys.exit(1)
 
-predictions = classifier.predict(X_test) # Make predictions on the test data
+    train_file = sys.argv[1]
+    test_file = sys.argv[2]
 
-tree_text = export_text(classifier, feature_names=feature_names, class_names=class_names)
-print(tree_text) # Print the decision tree structure
+    X_train, Y_train, X_test, Y_test =  preprocess_data(train_file, test_file) # Preprocess the training and test data and extract features
 
-correct = 0
+    classifier = DecisionTreeClassifier()
+    classifier.fit(X_train, Y_train)
 
-for prediction, actual in zip(predictions, Y_test):
-    if prediction == actual:
-        correct += 1
+    predictions = classifier.predict(X_test) # Make predictions on the test data
 
-accuracy = correct / len(Y_test) * 100
+    tree_text = export_text(classifier, feature_names=feature_names, class_names=class_names)
+    print(tree_text)
 
-print(f"Accuracy: {accuracy:.2f}%") # Print the accuracy of the model on the test data
+    correct = 0
+
+    for prediction, actual in zip(predictions, Y_test):
+        if prediction == actual:
+            correct += 1
+
+    accuracy = correct / len(Y_test) * 100
+
+    print(f"Accuracy: {accuracy:.2f}%")
 
 
-i = 0
+    i = 0
 
-with open(test_file, "r") as infile, open("SBD.test.out", "w") as outfile:
-    for line in infile:
-        columns = line.split()
-        token = columns[1]
-        label = columns[2]
+    with open(test_file, "r") as infile, open("SBD.test.out", "w") as outfile:
+        for line in infile:
+            columns = line.split()
+            token = columns[1]
+            label = columns[2]
 
-        if token.endswith("."):
-            predicted_label = predictions[i]
-            if predicted_label == 0:
-                predicted_label = "NEOS"
-            else:
-                predicted_label = "EOS"
-            i += 1
+            if token.endswith("."):
+                predicted_label = predictions[i]
+                if predicted_label == 0:
+                    predicted_label = "NEOS"
+                else:
+                    predicted_label = "EOS"
+                i += 1
 
-            outfile.write(f"{token} {label} {predicted_label}\n")
-                   
+                outfile.write(f"{token} {label} {predicted_label}\n")
+
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())                  
