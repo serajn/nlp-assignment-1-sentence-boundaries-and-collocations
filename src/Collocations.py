@@ -2,6 +2,8 @@ import sys
 import math
 import string
 
+# Counts all unigrams in the corpus that do not only consist of punctuation and stores them in a dictionary along with their counts
+
 def count_unigrams(infile):
     with open(infile, "r") as file:
         unigrams = {}
@@ -12,18 +14,23 @@ def count_unigrams(infile):
             tokens = line.split()
 
             for token in tokens:
-                if token and all(char in string.punctuation for char in token):
+                if token and all(char in string.punctuation for char in token): # Filters punctuation only unigrams
                     continue
 
                 if token in unigrams:
                     unigrams[token] += 1
                 else:
                     unigrams[token] = 1
-
+        
+        # For debugging (ignore)
+        '''
         with open("unigrams.txt", "w") as outfile:
             outfile.write(f" {unigrams}")
+        '''
 
     return unigrams       
+
+# Counts all bigrams in the corpus that do not only consist of punctuation and stores them in a dictionary along with their counts
 
 def count_bigrams(infile):
     with open(infile, "r") as file:
@@ -38,19 +45,23 @@ def count_bigrams(infile):
                 bigram = (tokens[i], tokens[i+1])
 
                 if (bigram[0] and all(char in string.punctuation for char in bigram[0])
-                        or bigram[1] and all(char in string.punctuation for char in bigram[1])):
+                        or bigram[1] and all(char in string.punctuation for char in bigram[1])): # Filters punctuation only bigrams
                     continue
 
                 if bigram in bigrams:
                     bigrams[bigram] += 1
                 else:
                     bigrams[bigram] = 1
-                
-
+        
+        # For debugging (ignore)        
+        '''
         with open("bigrams.txt", "w") as outfile:
             outfile.write(f"{bigrams}")
+        '''
 
     return bigrams
+
+# Calculates the N term in the chi-square and PMI formulas
 
 def calculate_N(bigrams):
     count = 0
@@ -59,6 +70,8 @@ def calculate_N(bigrams):
         count += bigrams[bigram]
 
     return count
+
+# Calculates the chi-square of each bigram
 
 def calculate_chi_squares(unigrams, bigrams):
     chi_squares = {}
@@ -77,6 +90,8 @@ def calculate_chi_squares(unigrams, bigrams):
         outfile.write(f"{chi_squares}")
 
     return chi_squares
+
+# calculates the pmi score of each bigram
 
 def calculate_pmi(unigrams, bigrams):
     pmi_scores = {}
