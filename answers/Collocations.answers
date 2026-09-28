@@ -1,0 +1,65 @@
+Completeness of the program:
+    Checklist:
+        - Collect the raw counts of the unigrams:                   Yes
+        - Collect the raw counts of the bigrams:                    Yes
+        - Implement the chi-square as a separate function:          Yes
+        - Implement pmi as a separate function:                     Yes
+        - Rank both chi-square and pmi by the top-twenty results:   Yes
+
+    All steps as required by the assignment instructions have been fulfilled.
+
+Top-twenty chi-square bigrams:
+
+('Golf', 'Course') 366682.0
+('Traveling', 'Abroad') 366682.0
+('Three-month', 'T-bill') 366682.0
+('Competing', 'asset-allocation') 366682.0
+('Mill', 'Playhouse') 366682.0
+('Perfect', 'Witness') 366682.0
+('Stockard', 'Channing') 366682.0
+('Final', 'Days') 366682.0
+('Brideshead', 'Revisited') 366682.0
+('schizoid', 'horror') 366682.0
+('Polished', 'hooves') 366682.0
+('Shiny', 'Nikes') 366682.0
+('Glory', 'Enough') 366682.0
+('Ku', 'Klux') 366682.0
+('Klux', 'Klan') 366682.0
+('Latest', 'Period') 366682.0
+('limply', 'constructed') 366682.0
+('pained', 'expressions') 366682.0
+('eloquently', 'explores') 366682.0
+('Jean-Jacques', 'Annaud') 366682.0
+
+Top-twenty pmi bigrams:
+
+('Golf', 'Course') 18.484
+('Traveling', 'Abroad') 18.484
+('Three-month', 'T-bill') 18.484
+('Competing', 'asset-allocation') 18.484
+('Mill', 'Playhouse') 18.484
+('Perfect', 'Witness') 18.484
+('Stockard', 'Channing') 18.484
+('Final', 'Days') 18.484
+('Brideshead', 'Revisited') 18.484
+('schizoid', 'horror') 18.484
+('Polished', 'hooves') 18.484
+('Shiny', 'Nikes') 18.484
+('Glory', 'Enough') 18.484
+('Ku', 'Klux') 18.484
+('Klux', 'Klan') 18.484
+('Latest', 'Period') 18.484
+('limply', 'constructed') 18.484
+('pained', 'expressions') 18.484
+('eloquently', 'explores') 18.484
+('Jean-Jacques', 'Annaud') 18.484
+
+Discussion:
+
+The resulting top-twenty bigrams were the same for both the chi-square and pmi methods.
+I suspect that I made a mistake in my implementation of the chi-square function. Most likely
+I needed to construct a contingency table but I was unsure if that was necessary. After seeing the results, I
+belive that is what was wrong with the implementation.
+
+Both methods seem to identify a few collocations. However, since the lists are both identical, I can't determine
+which method was better without further investigation.
